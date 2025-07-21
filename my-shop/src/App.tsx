@@ -1,19 +1,45 @@
-import React, { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
-import ProductList from "./components/ProductList";
+import ProductListPage from "./pages/ProductListPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CartPage from "./pages/CartPage";
+import { useState } from "react";
+import type { Product } from "./data/products";
 
-const App: React.FC = () => {
-  const [cartCount, setCartCount] = useState(0);
+interface CartItem {
+  product: Product;
+  quantity: number;
+}
 
-  const handleAddToCart = () => {
-    setCartCount((prev) => prev + 1);
+const App = () => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  const handleAddToCart = (product: Product) => {
+    setCartItems(prev => {
+      const exist = prev.find(item => item.product.id === product.id);
+      if (exist) {
+        return prev.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prev, { product, quantity: 1 }];
+      }
+    });
   };
 
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <BrowserRouter>
       <Header cartCount={cartCount} />
-      <ProductList onAddToCart={handleAddToCart} />
-    </div>
+      <Routes>
+        <Route path="/" element={<ProductListPage onAddToCart={handleAddToCart} />} />
+        <Route path="/products/:id" element={<ProductDetailPage onAddToCart={handleAddToCart} />} />
+        <Route path="/cart" element={<CartPage cartItems={cartItems} setCartItems={setCartItems} />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

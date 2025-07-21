@@ -5,8 +5,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ cartCount }) => (
-  <header className="w-full p-4 bg-white shadow fixed top-0 left-0 z-10 flex justify-between items-center">
-    <h1 className="text-lg font-bold">응용소프트웨어 샵</h1>
+  <header className="w-full p-4 bg-white shadow fixed top-0 left-10 z-10 flex justify-between items-center">
+    <h4 className="text-lg font-bold">응용소프트웨어 샵</h4>
     <div className="relative">
       <span className="material-icons">shopping_cart</span>
       {cartCount > 0 && (

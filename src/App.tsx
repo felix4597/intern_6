@@ -1,20 +1,16 @@
-import React, { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
-import ProductList from "./components/ProductList";
+import ProductListPage from "./pages/ProductListPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 
-const App: React.FC = () => {
-  const [cartCount, setCartCount] = useState(0);
-
-  const handleAddToCart = () => {
-    setCartCount((prev) => prev + 1);
-  };
-
-  return (
-    <div className="bg-gray-50 min-h-screen">
-      <Header cartCount={cartCount} />
-      <ProductList onAddToCart={handleAddToCart} />
-    </div>
-  );
-};
+const App = () => (
+  <BrowserRouter>
+    <Header cartCount={0} />
+    <Routes>
+      <Route path="/" element={<ProductListPage />} />
+      <Route path="/product/:id" element={<ProductDetailPage />} />
+    </Routes>
+  </BrowserRouter>
+);
 
 export default App;

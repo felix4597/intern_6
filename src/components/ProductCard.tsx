@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Product } from "../data/products";
+import type { Product } from "../data/products";
 
 interface ProductCardProps {
   product: Product;
@@ -27,9 +27,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
       <p className="text-gray-700">{product.price.toLocaleString()}원</p>
       <button
         onClick={handleClick}
-        className={\`mt-2 w-full py-1 rounded \${added
+        className={`mt-2 w-full py-1 rounded ${added
           ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-          : "bg-blue-500 text-white hover:bg-blue-600"}\`}
+          : "bg-blue-500 text-white hover:bg-blue-600"}`}
         disabled={added}
       >
         {added ? "담김" : "담기"}

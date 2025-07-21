@@ -8,7 +8,7 @@ interface ProductListProps {
 
 const ProductList: React.FC<ProductListProps> = ({ onAddToCart }) => {
   return (
-    <main className="grid grid-cols-2 gap-4 p-4 mt-20">
+    <main className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 mt-20 max-w-screen-md mx-auto">
       {products.map((product) => (
         <ProductCard
           key={product.id}
