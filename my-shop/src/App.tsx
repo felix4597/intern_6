@@ -3,6 +3,8 @@ import Header from "./components/Header";
 import ProductListPage from "./pages/ProductListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
+import PaymentPage from "./pages/PaymentPage"; // ✅ 추가
+
 import { useState } from "react";
 import type { Product } from "./data/products";
 
@@ -38,6 +40,7 @@ const App = () => {
         <Route path="/" element={<ProductListPage onAddToCart={handleAddToCart} />} />
         <Route path="/products/:id" element={<ProductDetailPage onAddToCart={handleAddToCart} />} />
         <Route path="/cart" element={<CartPage cartItems={cartItems} setCartItems={setCartItems} />} />
+        <Route path="/payment" element={<PaymentPage />} /> {/* ✅ 추가 */}
       </Routes>
     </BrowserRouter>
   );

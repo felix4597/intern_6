@@ -18,23 +18,28 @@ const CardRegistrationForm: React.FC<Props> = ({ onRegister }) => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = () => {
-    if (number.length === 16 && expiry && holder && securityCode && password) {
-      const masked = "****-****-****-" + number.slice(-4);
-      onRegister({
-        id: Date.now(),
-        number: masked,
-        expiry,
-        holder,
-        securityCode,
-        password
-      });
-      setNumber("");
-      setExpiry("");
-      setHolder("");
-      setSecurityCode("");
-      setPassword("");
-    }
-  };
+  const sanitizedNumber = number.replace(/\D/g, ""); // 숫자만 추출
+  if (sanitizedNumber.length === 16 && expiry && holder && securityCode && password) {
+    const maskedNumber = sanitizedNumber.replace(/(.{4})/g, "$1 ").trim();
+    onRegister({
+      id: Date.now(),
+      cardHolder: holder,
+      cardNumber: maskedNumber,
+      expiry,
+      securityCode,
+      password,
+    });
+
+    // 초기화
+    setNumber("");
+    setExpiry("");
+    setHolder("");
+    setSecurityCode("");
+    setPassword("");
+  } else {
+    alert("모든 입력란을 정확히 입력해주세요.");
+  }
+};
 
   return (
     <div className="space-y-2 mb-4">

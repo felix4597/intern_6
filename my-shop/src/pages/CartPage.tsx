@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; // ✅ 추가
 import type { Product } from "../data/products";
 
 interface CartItem {
@@ -12,6 +13,8 @@ interface CartPageProps {
 }
 
 const CartPage: React.FC<CartPageProps> = ({ cartItems, setCartItems }) => {
+  const navigate = useNavigate(); // ✅ 결제 페이지 이동을 위한 훅
+
   // 수량 증가/감소 함수
   const changeQuantity = (id: number, delta: number) => {
     setCartItems(prev =>
@@ -30,7 +33,13 @@ const CartPage: React.FC<CartPageProps> = ({ cartItems, setCartItems }) => {
     setCartItems(prev => prev.filter(item => item.product.id !== id));
   };
 
-  if (cartItems.length === 0) return <p className="mt-10 text-center">장바구니가 비어 있습니다.</p>;
+  const handleGoToPayment = () => {
+    navigate("/payment"); // ✅ 결제 페이지로 이동
+  };
+
+  if (cartItems.length === 0) {
+    return <p className="mt-10 text-center">장바구니가 비어 있습니다.</p>;
+  }
 
   return (
     <div className="max-w-md mx-auto p-4 mt-20">
@@ -66,6 +75,14 @@ const CartPage: React.FC<CartPageProps> = ({ cartItems, setCartItems }) => {
           </li>
         ))}
       </ul>
+
+      {/* ✅ 결제하기 버튼 */}
+      <button
+        onClick={handleGoToPayment}
+        className="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+      >
+        결제하기
+      </button>
     </div>
   );
 };
