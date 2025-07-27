@@ -18,28 +18,27 @@ const CardRegistrationForm: React.FC<Props> = ({ onRegister }) => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = () => {
-  const sanitizedNumber = number.replace(/\D/g, ""); // 숫자만 추출
-  if (sanitizedNumber.length === 16 && expiry && holder && securityCode && password) {
-    const maskedNumber = sanitizedNumber.replace(/(.{4})/g, "$1 ").trim();
-    onRegister({
-      id: Date.now(),
-      cardHolder: holder,
-      cardNumber: maskedNumber,
-      expiry,
-      securityCode,
-      password,
-    });
+    const digits = number.replace(/\D/g, "");
+    if (digits.length === 16 && expiry && holder && securityCode && password) {
+      const masked = digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim(); // 마스킹된 1234 5678 9012 3456
+      onRegister({
+        id: Date.now(),
+        cardHolder: holder,
+        cardNumber: masked,
+        expiry,
+        securityCode,
+        password
+      });
 
-    // 초기화
-    setNumber("");
-    setExpiry("");
-    setHolder("");
-    setSecurityCode("");
-    setPassword("");
-  } else {
-    alert("모든 입력란을 정확히 입력해주세요.");
-  }
-};
+      setNumber("");
+      setExpiry("");
+      setHolder("");
+      setSecurityCode("");
+      setPassword("");
+    } else {
+      alert("모든 입력란을 정확히 입력해주세요.");
+    }
+  };
 
   return (
     <div className="space-y-2 mb-4">
@@ -50,7 +49,7 @@ const CardRegistrationForm: React.FC<Props> = ({ onRegister }) => {
       <CardPasswordInput value={password} onChange={setPassword} />
       <button
         onClick={handleSubmit}
-        className="bg-green-500 text-white py-2 px-4 rounded w-full"
+        className="bg-green-500 text-white py-2 px-4 rounded w-full hover:bg-green-600"
       >
         카드 등록
       </button>
