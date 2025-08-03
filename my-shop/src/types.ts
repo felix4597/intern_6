@@ -8,4 +8,5 @@ export interface CartItem {
 
 export interface CartPageProps {
   cartItems: CartItem[];
-  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;}
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+}
