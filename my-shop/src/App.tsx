@@ -3,18 +3,13 @@ import Header from "./components/Header";
 import ProductListPage from "./pages/ProductListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
-import PaymentPage from "./pages/PaymentPage"; // ✅ 추가
+import PaymentPage from "./pages/PaymentPage";
 
-import { useState } from "react";
 import type { Product } from "./data/products";
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
+import { useCartStorage } from "./hooks/useCartStorage";
 
 const App = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, setCartItems } = useCartStorage([]); // ✅ localStorage 연동
 
   const handleAddToCart = (product: Product) => {
     setCartItems(prev => {
@@ -25,9 +20,8 @@ const App = () => {
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
-      } else {
-        return [...prev, { product, quantity: 1 }];
       }
+      return [...prev, { product, quantity: 1 }];
     });
   };
 
@@ -37,10 +31,19 @@ const App = () => {
     <BrowserRouter>
       <Header cartCount={cartCount} />
       <Routes>
-        <Route path="/" element={<ProductListPage onAddToCart={handleAddToCart} />} />
-        <Route path="/products/:id" element={<ProductDetailPage onAddToCart={handleAddToCart} />} />
-        <Route path="/cart" element={<CartPage cartItems={cartItems} setCartItems={setCartItems} />} />
-        <Route path="/payment" element={<PaymentPage />} /> {/* ✅ 추가 */}
+        <Route
+          path="/"
+          element={<ProductListPage onAddToCart={handleAddToCart} />}
+        />
+        <Route
+          path="/products/:id"
+          element={<ProductDetailPage onAddToCart={handleAddToCart} />}
+        />
+        <Route
+          path="/cart"
+          element={<CartPage cartItems={cartItems} setCartItems={setCartItems} />}
+        />
+        <Route path="/payment" element={<PaymentPage />} />
       </Routes>
     </BrowserRouter>
   );
