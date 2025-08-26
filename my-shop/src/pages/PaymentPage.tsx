@@ -1,53 +1,55 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ 추가
 import CardRegistrationForm from "../components/payment/CardRegistrationForm";
 import CardList from "../components/payment/CardList";
 import PurchaseButton from "../components/payment/PurchaseButton";
 import type { Card } from "../data/cards";
 import CryptoJS from "crypto-js";
 
-/**
- * 마스킹/파생 필드 방식
- * - 등록 시 평문으로 파생값(last4, maskedNumber, cvcLength) 생성
- * - 저장 시 민감정보(번호, CVC, 비밀번호 앞 2자리)는 암호화
- * - 화면 표시는 파생 필드만 사용(복호화 X)
- */
-
 const STORAGE_KEY = "payment_cards";
-const SECRET_KEY = import.meta.env.VITE_CRYPTO_KEY || "dev-only-key"; // Vite 방식
+const SECRET_KEY = import.meta.env.VITE_CRYPTO_KEY || "dev-only-key";
 
-// --- 암호화 유틸 (복호화는 사용하지 않음) ---
-const encrypt = (text: string): string =>
-  CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+// 주문/카트 저장 키
+const ORDER_KEY = "last_order";
+const CART_KEY = "cartItems";
 
-// --- 파생값 유틸 ---
+function createOrderFromCart() {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    if (!raw) return null;
+    const items = JSON.parse(raw) as { product: { id: number; price: number }, quantity: number }[];
+    const order = {
+      id: "ORD-" + Math.random().toString(36).slice(2, 10).toUpperCase(),
+      items: items.map(it => ({ productId: it.product.id, quantity: it.quantity, price: it.product.price })),
+      total: items.reduce((sum, it) => sum + it.product.price * it.quantity, 0),
+      createdAt: new Date().toISOString(),
+    };
+    return order;
+  } catch { return null; }
+}
+
+// 암호화 유틸
+const encrypt = (text: string): string => CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
 const onlyDigits = (v: string) => v.replace(/\D/g, "");
-const deriveMaskedNumber = (plain16digits: string): string => {
-  // "**** **** p3 p4"
-  const d = plain16digits;
-  if (d.length !== 16) return "**** **** **** ****";
-  const p3 = d.slice(8, 12);
-  const p4 = d.slice(12, 16);
-  return `**** **** ${p3} ${p4}`;
-};
-const deriveLast4 = (plainDigits: string) => plainDigits.slice(-4);
+const deriveMaskedNumber = (d: string) => d.length === 16 ? `**** **** ${d.slice(8,12)} ${d.slice(12,16)}` : "**** **** **** ****";
+const deriveLast4 = (d: string) => d.slice(-4);
 const deriveCVCLength = (cvc: string) => onlyDigits(cvc).length;
 
-// --- 저장용 타입(암호문 + 파생값 포함) ---
 interface StoredCard extends Card {
-  cardNumber: string;   // encrypted
-  securityCode: string; // encrypted
-  password?: string;    // encrypted (앞 2자리 입력만 받는 전제)
-  last4: string;        // derived
-  maskedNumber: string; // derived
-  cvcLength: number;    // derived
+  cardNumber: string;
+  securityCode: string;
+  password?: string;
+  last4: string;
+  maskedNumber: string;
+  cvcLength: number;
 }
 
 const PaymentPage: React.FC = () => {
   const [cards, setCards] = useState<StoredCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
 
-  // --- 로컬 스토리지 로드/저장 ---
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -57,46 +59,33 @@ const PaymentPage: React.FC = () => {
         setCards(parsed);
         if (parsed.length > 0) setSelectedCardId(parsed[parsed.length - 1].id);
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, [cards]);
 
-  // --- 카드 등록: 파생값 생성 + 암호화 저장 ---
   const handleRegister = useCallback((card: Card) => {
     const digits = onlyDigits(card.cardNumber);
-    const last4 = deriveLast4(digits);
-    const maskedNumber = deriveMaskedNumber(digits);
-    const cvcLength = deriveCVCLength(card.securityCode);
-
     const stored: StoredCard = {
       ...card,
       cardNumber: encrypt(digits),
       securityCode: encrypt(card.securityCode),
       password: card.password ? encrypt(card.password) : "",
-      last4,
-      maskedNumber,
-      cvcLength,
+      last4: deriveLast4(digits),
+      maskedNumber: deriveMaskedNumber(digits),
+      cvcLength: deriveCVCLength(card.securityCode),
     };
-
     setCards(prev => [...prev, stored]);
     setSelectedCardId(card.id);
   }, []);
 
-  const selectedCard = useMemo(
-    () => cards.find(c => c.id === selectedCardId) || null,
-    [cards, selectedCardId]
-  );
+  const selectedCard = useMemo(() => cards.find(c => c.id === selectedCardId) || null, [cards, selectedCardId]);
 
-  // --- 결제 처리 (데모) ---
+  // ✅ 결제 처리 → 주문 생성 후 Success 페이지 이동
   const handlePurchase = useCallback(() => {
     if (!selectedCard) {
       alert("결제할 카드를 선택해주세요.");
@@ -105,94 +94,55 @@ const PaymentPage: React.FC = () => {
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      alert("결제가 완료되었습니다.");
+      const order = createOrderFromCart();
+      if (order) {
+        try {
+          localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+          localStorage.setItem(CART_KEY, JSON.stringify([]));
+        } catch {}
+        navigate("/payment/success");
+      } else {
+        alert("결제할 상품이 없습니다.");
+      }
     }, 1500);
-  }, [selectedCard]);
-
-  // --- 라벨(복호화 없이 파생값만) ---
-  const cardLabel = (c: StoredCard) => `${c.cardHolder} •••• ${c.last4}`;
+  }, [selectedCard, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4 flex items-center justify-center">
       <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">카드 결제</h1>
 
-        {/* 카드 미리보기(마스킹/파생 필드만 사용) */}
         {selectedCard && (
-          <div className="relative w-full h-56 mb-6 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 text-white shadow-2xl px-6 py-5 transform transition-transform duration-300 hover:scale-105">
-            <div className="absolute top-4 right-5 text-sm font-bold tracking-widest opacity-80">
-              VISA
-            </div>
-
-            <div className="mt-10 text-2xl tracking-widest font-mono select-none">
-              {selectedCard.maskedNumber}
-            </div>
-
-            <div className="mt-6 flex justify-between items-end text-xs">
-              <div>
-                <div className="text-gray-200">CARD HOLDER</div>
-                <div className="text-white font-semibold">
-                  {selectedCard.cardHolder}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-200">EXPIRES</div>
-                <div className="text-white">{selectedCard.expiry}</div>
-              </div>
-              <div>
-                <div className="text-gray-200">CVC</div>
-                <div className="text-white">{"*".repeat(selectedCard.cvcLength)}</div>
-              </div>
+          <div className="relative w-full h-56 mb-6 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 text-white shadow-2xl px-6 py-5">
+            <div className="mt-10 text-2xl tracking-widest font-mono">{selectedCard.maskedNumber}</div>
+            <div className="mt-6 flex justify-between text-xs">
+              <div><div>CARD HOLDER</div><div>{selectedCard.cardHolder}</div></div>
+              <div><div>EXPIRES</div><div>{selectedCard.expiry}</div></div>
+              <div><div>CVC</div><div>{"*".repeat(selectedCard.cvcLength)}</div></div>
             </div>
           </div>
         )}
 
-        {/* 카드 등록 입력 폼 (평문 → 파생+암호화 저장) */}
         <CardRegistrationForm onRegister={handleRegister} />
 
-        {/* 카드 선택 */}
         <div className="mt-6">
-          <label className="block text-sm font-medium mb-2">결제할 카드 선택</label>
-          <select
-            value={selectedCardId ?? ""}
-            onChange={(e) => setSelectedCardId(Number(e.target.value))}
-            className="w-full p-2 border rounded"
-          >
+          <label className="block text-sm mb-2">결제할 카드 선택</label>
+          <select value={selectedCardId ?? ""} onChange={(e) => setSelectedCardId(Number(e.target.value))} className="w-full p-2 border rounded">
             <option value="" disabled>카드를 선택하세요</option>
             {cards.map(card => (
-              <option key={card.id} value={card.id}>
-                {cardLabel(card)}
-              </option>
+              <option key={card.id} value={card.id}>{card.cardHolder} •••• {card.last4}</option>
             ))}
           </select>
         </div>
 
-        {/* 카드 목록(클릭 시 선택) */}
         <div className="mt-6">
-          <CardList
-            cards={cards}
-            selectedCardId={selectedCardId}
-            onSelectCard={setSelectedCardId}
-          />
+          <CardList cards={cards} selectedCardId={selectedCardId} onSelectCard={setSelectedCardId} />
         </div>
 
-        {/* 결제 버튼 */}
         <div className="mt-6">
-          <PurchaseButton
-            cards={cards}
-            onPurchase={handlePurchase}
-            disabled={isProcessing || !selectedCard}
-          />
-          {isProcessing && (
-            <p className="mt-2 text-sm text-gray-500 text-center">결제 처리 중...</p>
-          )}
+          <PurchaseButton cards={cards} onPurchase={handlePurchase} disabled={isProcessing || !selectedCard} />
+          {isProcessing && <p className="mt-2 text-sm text-gray-500 text-center">결제 처리 중...</p>}
         </div>
-
-        {!import.meta.env.VITE_CRYPTO_KEY && (
-          <p className="mt-4 text-xs text-red-500">
-            경고: VITE_CRYPTO_KEY가 설정되지 않았습니다. 개발/테스트 환경에서만 사용하세요.
-          </p>
-        )}
       </div>
     </div>
   );

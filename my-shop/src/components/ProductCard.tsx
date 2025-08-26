@@ -24,10 +24,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
 
   return (
     <div className="border rounded-xl p-3 shadow hover:shadow-md transition bg-white">
+      <div className="text-xs text-gray-500">{product.brand}</div>
       <img
         src={product.imageUrl}
         alt={product.name}
-        className="w-full h-36 object-cover rounded cursor-pointer"
+        className="w-full h-36 object-cover rounded cursor-pointer mt-1"
         onClick={goToDetail}
       />
       <h2

@@ -1,54 +1,31 @@
-import { Button } from './Button';
-import './header.css';
+import React from "react";
+import { Link } from "react-router-dom";
 
-type User = {
-  name: string;
-};
-
-export interface HeaderProps {
-  user?: User;
-  onLogin?: () => void;
-  onLogout?: () => void;
-  onCreateAccount?: () => void;
+interface HeaderProps {
+  cartCount: number;
 }
 
-export const Header = ({ user, onLogin, onLogout, onCreateAccount }: HeaderProps) => (
-  <header>
-    <div className="storybook-header">
-      <div>
-        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <g fill="none" fillRule="evenodd">
-            <path
-              d="M10 0h12a10 10 0 0110 10v12a10 10 0 01-10 10H10A10 10 0 010 22V10A10 10 0 0110 0z"
-              fill="#FFF"
-            />
-            <path
-              d="M5.3 10.6l10.4 6v11.1l-10.4-6v-11zm11.4-6.2l9.7 5.5-9.7 5.6V4.4z"
-              fill="#555AB9"
-            />
-            <path
-              d="M27.2 10.6v11.2l-10.5 6V16.5l10.5-6zM15.7 4.4v11L6 10l9.7-5.5z"
-              fill="#91BAF8"
-            />
-          </g>
-        </svg>
-        <h1>Acme</h1>
-      </div>
-      <div>
-        {user ? (
-          <>
-            <span className="welcome">
-              Welcome, <b>{user.name}</b>!
+const Header: React.FC<HeaderProps> = ({ cartCount }) => (
+  <header className="w-full p-4 bg-white shadow fixed top-0 left-0 z-10 flex justify-between items-center">
+    <Link to="/" className="text-lg font-bold hover:opacity-90">My Shop</Link>
+    <nav className="flex items-center gap-4">
+      <Link to="/products" className="text-sm text-gray-700 hover:underline">상품목록</Link>
+      <div className="relative">
+        <Link
+          to="/cart"
+          className="material-icons relative text-3xl text-gray-700 hover:text-gray-900"
+          aria-label="장바구니"
+        >
+          shopping_cart
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+              {cartCount}
             </span>
-            <Button size="small" onClick={onLogout} label="Log out" />
-          </>
-        ) : (
-          <>
-            <Button size="small" onClick={onLogin} label="Log in" />
-            <Button primary size="small" onClick={onCreateAccount} label="Sign up" />
-          </>
-        )}
+          )}
+        </Link>
       </div>
-    </div>
+    </nav>
   </header>
 );
+
+export default Header;

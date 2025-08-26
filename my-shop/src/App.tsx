@@ -4,18 +4,19 @@ import ProductListPage from "./pages/ProductListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import PaymentPage from "./pages/PaymentPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 
 import type { Product } from "./data/products";
 import { useCartStorage } from "./hooks/useCartStorage";
 
 const App = () => {
-  const { cartItems, setCartItems } = useCartStorage([]); // ✅ localStorage 연동
+  const { cartItems, setCartItems } = useCartStorage([]);
 
   const handleAddToCart = (product: Product) => {
-    setCartItems(prev => {
-      const exist = prev.find(item => item.product.id === product.id);
+    setCartItems((prev) => {
+      const exist = prev.find((item) => item.product.id === product.id);
       if (exist) {
-        return prev.map(item =>
+        return prev.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
@@ -35,6 +36,11 @@ const App = () => {
           path="/"
           element={<ProductListPage onAddToCart={handleAddToCart} />}
         />
+        {/* 별칭: /products → 목록 */}
+        <Route
+          path="/products"
+          element={<ProductListPage onAddToCart={handleAddToCart} />}
+        />
         <Route
           path="/products/:id"
           element={<ProductDetailPage onAddToCart={handleAddToCart} />}
@@ -44,6 +50,7 @@ const App = () => {
           element={<CartPage cartItems={cartItems} setCartItems={setCartItems} />}
         />
         <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/payment/success" element={<PaymentSuccessPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -4,7 +4,8 @@ export interface Product {
   price: number;
   imageUrl: string;
   description: string;
-  options?: string
+  brand: string;
+  options?: string;
 }
 
 export const products: Product[] = [
@@ -14,6 +15,7 @@ export const products: Product[] = [
     price: 32000,
     imageUrl: "/images/product1.png",
     description: "상품 A는 고급 원단으로 제작된 프리미엄 제품입니다.",
+    brand: "슈킹 프리미엄",
   },
   {
     id: 2,
@@ -21,6 +23,7 @@ export const products: Product[] = [
     price: 25900,
     imageUrl: "/images/product2.png",
     description: "상품 B는 일상용으로 적합한 실속형 제품입니다.",
+    brand: "슈킹 베이직",
   },
   {
     id: 3,
@@ -28,6 +31,7 @@ export const products: Product[] = [
     price: 21000,
     imageUrl: "/images/product3.png",
     description: "상품 C는 친환경 소재를 사용한 제품입니다.",
+    brand: "슈킹 에코",
   },
   {
     id: 4,
@@ -35,5 +39,6 @@ export const products: Product[] = [
     price: 15000,
     imageUrl: "/images/product4.png",
     description: "상품 D는 휴대성과 편의성을 강조한 제품입니다.",
+    brand: "슈킹 라이트",
   },
 ];
